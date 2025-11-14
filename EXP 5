@@ -1,0 +1,106 @@
+from collections import deque
+
+# Initial state: (M1, C1, B, M2, C2)
+# M1, C1: Missionaries and Cannibals on Bank 1 (Start)
+# B: Boat location (1 for Start bank, 0 for Destination bank)
+# M2, C2: Missionaries and Cannibals on Bank 2 (Destination)
+START_STATE = (3, 3, 1, 0, 0)
+GOAL_STATE = (0, 0, 0, 3, 3)
+
+def is_safe(state):
+    """Checks if a state is safe (valid) based on the constraint."""
+    m1, c1, _, m2, c2 = state
+    
+    # 1. Check constraints on Bank 1 (Start)
+    # If there are missionaries (m1 > 0), cannibals (c1) must not outnumber them.
+    if m1 > 0 and c1 > m1:
+        return False
+        
+    # 2. Check constraints on Bank 2 (Destination)
+    if m2 > 0 and c2 > m2:
+        return False
+        
+    # 3. Check for valid counts (not strictly needed since we only generate valid moves, 
+    # but good as a safety check for non-negative and total numbers)
+    if m1 < 0 or c1 < 0 or m2 < 0 or c2 < 0:
+        return False
+
+    return True
+
+def get_next_states(current_state):
+    """Generates all valid and safe states reachable from the current state."""
+    m1, c1, b, m2, c2 = current_state
+    next_states = []
+    
+    # Possible boat moves: (missionaries, cannibals)
+    # Boat can carry 1 or 2 people.
+    moves = [(1, 0), (2, 0), (0, 1), (0, 2), (1, 1)] 
+
+    if b == 1: # Boat is at the Start Bank (moving to Destination)
+        for dm, dc in moves:
+            # Check if there are enough people to move
+            if m1 >= dm and c1 >= dc:
+                new_state = (m1 - dm, c1 - dc, 0, m2 + dm, c2 + dc)
+                if is_safe(new_state):
+                    next_states.append(new_state)
+    
+    else: # b == 0, Boat is at the Destination Bank (moving to Start)
+        for dm, dc in moves:
+            # Check if there are enough people to move
+            if m2 >= dm and c2 >= dc:
+                new_state = (m1 + dm, c1 + dc, 1, m2 - dm, c2 - dc)
+                if is_safe(new_state):
+                    next_states.append(new_state)
+                    
+    return next_states
+
+def solve_missionaries_cannibals():
+    """Finds the shortest solution path using BFS."""
+    queue = deque([(START_STATE, [START_STATE])]) # Stores (state, path)
+    visited = {START_STATE}
+
+    while queue:
+        current_state, path = queue.popleft()
+
+        if current_state == GOAL_STATE:
+            return path
+
+        for next_state in get_next_states(current_state):
+            if next_state not in visited:
+                visited.add(next_state)
+                new_path = path + [next_state]
+                queue.append((next_state, new_path))
+                
+    return "No solution found."
+
+def print_solution(path):
+    """Formats and prints the solution path clearly."""
+    if isinstance(path, str):
+        print(path)
+        return
+
+    print("Missionaries and Cannibals Solution (Shortest Path):")
+    print("Format: (M_Start, C_Start, Boat_Loc, M_Dest, C_Dest)")
+    print("-----------------------------------------------------")
+    
+    for i in range(len(path)):
+        m1, c1, b, m2, c2 = path[i]
+        
+        step_info = f"Step {i}: ({m1}, {c1}, {b}, {m2}, {c2})"
+        
+        if i > 0:
+            pm1, pc1, pb, pm2, pc2 = path[i-1]
+            
+            # Determine people moved
+            dm = abs(m1 - pm1) 
+            dc = abs(c1 - pc1)
+            
+            direction = "→ (West to East)" if b == 0 else "← (East to West)"
+            move_summary = f"Move: {dm}M, {dc}C {direction}"
+            print(f"{step_info} | {move_summary}")
+        else:
+            print(f"{step_info} | Start")
+
+# --- Execute the solver ---
+solution_path = solve_missionaries_cannibals()
+print_solution(solution_path)
