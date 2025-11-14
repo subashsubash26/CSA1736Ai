@@ -1,0 +1,45 @@
+def dfs(graph, start_node):
+    """
+    Initializes and starts the Depth-First Search traversal.
+
+    Args:
+        graph (dict): The graph represented as an adjacency dictionary.
+        start_node: The node to start the search from.
+    """
+    visited = set()
+    traversal_order = []
+    
+    # Start the recursive search
+    dfs_recursive(graph, start_node, visited, traversal_order)
+    
+    return traversal_order
+
+def dfs_recursive(graph, node, visited, traversal_order):
+    """
+    The recursive utility function for DFS.
+    """
+    # 1. Visit the current node
+    visited.add(node)
+    traversal_order.append(node)
+    
+    # 2. Recurse on all unvisited neighbors
+    # Note: We sort the neighbors here to ensure a consistent output order.
+    for neighbor in sorted(graph.get(node, [])):
+        if neighbor not in visited:
+            dfs_recursive(graph, neighbor, visited, traversal_order)
+
+
+# Example Graph (Same as used for BFS for comparison)
+example_graph = {
+    'A': ['B', 'C'],
+    'B': ['D', 'E'],
+    'C': ['F'],
+    'D': [],
+    'E': ['F'],
+    'F': []
+}
+
+# Run DFS starting from 'A'
+print(f"Graph: {example_graph}")
+print(f"DFS Traversal starting from 'A': {dfs(example_graph, 'A')}")
+# Expected output (visiting B before C, then D, etc.): ['A', 'B', 'D', 'E', 'F', 'C']
