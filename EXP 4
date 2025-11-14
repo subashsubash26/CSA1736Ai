@@ -1,0 +1,94 @@
+import re
+from itertools import permutations
+
+def solve_crypt_arithmetic(puzzle):
+    """
+    Solves a Crypt-Arithmetic puzzle by checking digit permutations.
+    
+    Args:
+        puzzle (str): The puzzle string, e.g., "SEND + MORE == MONEY"
+        
+    Returns:
+        dict or None: A dictionary mapping letters to digits if solved, otherwise None.
+    """
+    # 1. Extract all unique letters
+    unique_letters = set(re.findall(r'[A-Z]', puzzle))
+    
+    # 2. Identify the letters that cannot be zero (leading letters)
+    leading_letters = set()
+    words = re.findall(r'[A-Z]+', puzzle)
+    for word in words:
+        if len(word) > 1:
+            leading_letters.add(word[0])
+
+    # 3. Optimization: Order letters by frequency for faster assignment checks (optional)
+    # letter_list = list(unique_letters) 
+    letter_list = sorted(list(unique_letters)) # simpler list order
+
+    num_letters = len(letter_list)
+    if num_letters > 10:
+        return "Error: Puzzle has more than 10 unique letters."
+
+    # 4. Iterate through all possible permutations of digits (0-9)
+    # The length of the permutation is equal to the number of unique letters
+    for digits in permutations(range(10), num_letters):
+        # Create a mapping dictionary: {Letter: Digit}
+        solver_map = dict(zip(letter_list, digits))
+
+        # Check the "leading letter cannot be zero" constraint
+        is_valid_start = True
+        for letter in leading_letters:
+            if solver_map[letter] == 0:
+                is_valid_start = False
+                break
+        
+        if not is_valid_start:
+            continue
+
+        # 5. Substitute digits and evaluate the puzzle
+        equation = puzzle
+        for letter, digit in solver_map.items():
+            equation = equation.replace(letter, str(digit))
+
+        # The 'eval' function safely checks if the string evaluates to True
+        try:
+            if eval(equation):
+                return solver_map
+        except NameError:
+            # Should not happen if re.findall is correct, but good practice
+            continue
+
+    return None
+
+def format_output(puzzle, solution):
+    """Prints the puzzle and its numerical solution."""
+    if solution is None:
+        print(f"No solution found for: {puzzle}")
+        return
+
+    print(f"Puzzle: {puzzle}")
+    print("Solution:")
+    
+    # Map letters to digits in the puzzle string
+    solved_puzzle = puzzle
+    for letter, digit in solution.items():
+        solved_puzzle = solved_puzzle.replace(letter, str(digit))
+    
+    # Print the substitution map
+    print(f"  Mapping: {solution}")
+    print(f"  Result: {solved_puzzle}")
+
+
+# --- Example Usage ---
+
+# Classic Example
+PUZZLE_1 = "SEND + MORE == MONEY"
+solution_1 = solve_crypt_arithmetic(PUZZLE_1)
+format_output(PUZZLE_1, solution_1)
+
+print("\n" + "="*30 + "\n")
+
+# Another Example
+PUZZLE_2 = "TO + GO == OUT"
+solution_2 = solve_crypt_arithmetic(PUZZLE_2)
+format_output(PUZZLE_2, solution_2)
