@@ -1,0 +1,114 @@
+import heapq
+
+GOAL_STATE = (1, 2, 3, 4, 5, 6, 7, 8, 0) 
+SIZE = 3
+def manhattan_distance(state):
+    """Calculates the Manhattan distance heuristic for a given state."""
+    distance = 0
+    for i in range(SIZE * SIZE):
+        tile = state[i]
+        if tile != 0:
+            # Current (row, col)
+            current_row, current_col = divmod(i, SIZE)
+            # Goal position of the tile (row, col)
+            goal_index = GOAL_STATE.index(tile)
+            goal_row, goal_col = divmod(goal_index, SIZE)
+            
+            # Manhattan distance: |x1 - x2| + |y1 - y2|
+            distance += abs(current_row - goal_row) + abs(current_col - goal_col)
+    return distance
+
+def get_neighbors(state):
+    """Generates all valid neighboring states by sliding the empty tile (0)."""
+    # Find the index of the empty tile (0)
+    zero_index = state.index(0)
+    zero_row, zero_col = divmod(zero_index, SIZE)
+    
+    neighbors = []
+    # Possible moves: (d_row, d_col)
+    moves = [(0, 1), (0, -1), (1, 0), (-1, 0)] 
+    
+    # Check all 4 possible moves
+    for dr, dc in moves:
+        new_row, new_col = zero_row + dr, zero_col + dc
+        
+        # Check if the new position is within bounds
+        if 0 <= new_row < SIZE and 0 <= new_col < SIZE:
+            new_index = new_row * SIZE + new_col
+            
+            # Swap the empty tile with the tile at the new index
+            new_state_list = list(state)
+            new_state_list[zero_index], new_state_list[new_index] = new_state_list[new_index], new_state_list[zero_index]
+            
+            neighbors.append(tuple(new_state_list))
+    return neighbors
+
+def solve_8_puzzle(start_state_list):
+    """
+    Solves the 8-Puzzle using the A* algorithm.
+    """
+    start_state = tuple(start_state_list)
+    
+    if start_state == GOAL_STATE:
+        return ["Start is Goal"]
+    
+    # A* uses f(n) = g(n) + h(n)
+    # g(n): cost from start (number of moves)
+    # h(n): heuristic (Manhattan distance)
+    
+    # Priority Queue: Stores (f_score, g_score, state, path)
+    # We include g_score to break ties consistently, state for hashing, path for reconstruction.
+    priority_queue = [(manhattan_distance(start_state), 0, start_state, [start_state])]
+    
+    # Visited set stores states that have been expanded (to prevent loops)
+    visited = {start_state: 0} # {state: minimum g_score found so far}
+    
+    while priority_queue:
+        # Get the state with the lowest f_score
+        f_score, g_score, current_state, path = heapq.heappop(priority_queue)
+        
+        # Goal check
+        if current_state == GOAL_STATE:
+            return path
+        
+        # Generate neighbors
+        for neighbor in get_neighbors(current_state):
+            new_g_score = g_score + 1
+            
+            # Check if this neighbor is a better path than one previously found
+            if neighbor not in visited or new_g_score < visited[neighbor]:
+                visited[neighbor] = new_g_score
+                new_h_score = manhattan_distance(neighbor)
+                new_f_score = new_g_score + new_h_score
+                new_path = path + [neighbor]
+                
+                heapq.heappush(priority_queue, (new_f_score, new_g_score, neighbor, new_path))
+                
+    return "No solution found"
+
+def print_board(state):
+    """Utility function to print the 3x3 board cleanly."""
+    for i in range(0, 9, 3):
+        print(f"| {state[i]} {state[i+1]} {state[i+2]} |")
+
+# --- Example Usage ---
+
+# A solvable state (4 moves needed)
+start_state = [1, 2, 3, 0, 4, 6, 7, 5, 8] 
+
+# An easier solvable state (2 moves)
+# start_state = [1, 2, 3, 4, 5, 6, 7, 0, 8] 
+
+print("--- Start State ---")
+print_board(start_state)
+print("-" * 19)
+
+solution_path = solve_8_puzzle(start_state)
+
+if isinstance(solution_path, list):
+    print(f"Solution Found in {len(solution_path) - 1} moves!")
+    for step, state in enumerate(solution_path):
+        print(f"\nStep {step}:")
+        print_board(state)
+else:
+    print(solution_path)
