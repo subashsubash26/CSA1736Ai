@@ -1,0 +1,103 @@
+from collections import deque
+
+def solve_water_jug(jug1_cap, jug2_cap, target_amount):
+    """
+    Solves the Water Jug problem using Breadth-First Search (BFS).
+
+    Args:
+        jug1_cap (int): Capacity of the first jug.
+        jug2_cap (int): Capacity of the second jug.
+        target_amount (int): The amount of water to measure.
+
+    Returns:
+        list or str: The sequence of states (jug1_water, jug2_water) 
+                     or a 'No solution' message.
+    """
+    # Initialize BFS data structures
+    start_state = (0, 0)
+    queue = deque([(start_state, [start_state])]) # Stores (state, path)
+    visited = {start_state} # Stores only the state (to avoid loops)
+
+    while queue:
+        (j1, j2), path = queue.popleft()
+        
+        # Check if the goal is reached
+        if j1 == target_amount or j2 == target_amount:
+            return path
+
+        # List of possible actions:
+        # 1. Fill J1
+        # 2. Fill J2
+        # 3. Empty J1
+        # 4. Empty J2
+        # 5. Pour J1 to J2
+        # 6. Pour J2 to J1
+
+        possible_next_states = []
+
+        # 1. Fill J1 (jug1_cap, j2)
+        possible_next_states.append((jug1_cap, j2))
+        
+        # 2. Fill J2 (j1, jug2_cap)
+        possible_next_states.append((j1, jug2_cap))
+
+        # 3. Empty J1 (0, j2)
+        possible_next_states.append((0, j2))
+
+        # 4. Empty J2 (j1, 0)
+        possible_next_states.append((j1, 0))
+
+        # 5. Pour J1 to J2
+        pour_amount = min(j1, jug2_cap - j2)
+        if pour_amount > 0:
+            possible_next_states.append((j1 - pour_amount, j2 + pour_amount))
+
+        # 6. Pour J2 to J1
+        pour_amount = min(j2, jug1_cap - j1)
+        if pour_amount > 0:
+            possible_next_states.append((j1 + pour_amount, j2 - pour_amount))
+            
+        # Process neighbors
+        for next_j1, next_j2 in possible_next_states:
+            next_state = (next_j1, next_j2)
+            if next_state not in visited:
+                visited.add(next_state)
+                new_path = path + [next_state]
+                queue.append((next_state, new_path))
+                
+    return "No solution found."
+
+def print_solution(path, j1_cap, j2_cap):
+    """Formats and prints the solution path."""
+    if isinstance(path, str):
+        print(path)
+        return
+        
+    print(f"Goal reached! (Jug 1 Capacity: {j1_cap} | Jug 2 Capacity: {j2_cap})")
+    print("--- Solution Path ---")
+    
+    for i in range(len(path)):
+        j1, j2 = path[i]
+        
+        # Determine the action based on the transition (if not the start state)
+        action = "Start"
+        if i > 0:
+            prev_j1, prev_j2 = path[i-1]
+            
+            if j1 == j1_cap and prev_j1 != j1_cap: action = "Fill Jug 1"
+            elif j2 == j2_cap and prev_j2 != j2_cap: action = "Fill Jug 2"
+            elif j1 == 0 and prev_j1 != 0: action = "Empty Jug 1"
+            elif j2 == 0 and prev_j2 != 0: action = "Empty Jug 2"
+            elif j1 < prev_j1 and j2 > prev_j2: action = "Pour Jug 1 to Jug 2"
+            elif j1 > prev_j1 and j2 < prev_j2: action = "Pour Jug 2 to Jug 1"
+        
+        print(f"Step {i}: ({j1}, {j2}) - Action: {action}")
+
+
+# --- Example Usage ---
+JUG1_CAPACITY = 4
+JUG2_CAPACITY = 3
+TARGET = 2
+
+solution_path = solve_water_jug(JUG1_CAPACITY, JUG2_CAPACITY, TARGET)
+print_solution(solution_path, JUG1_CAPACITY, JUG2_CAPACITY)
