@@ -1,0 +1,59 @@
+import random
+import time
+
+def simulate_vacuum_agent(max_steps=10):
+    """
+    Simulates a simple vacuum cleaner agent in a two-location environment (A and B).
+    
+    Args:
+        max_steps (int): The maximum number of steps for the simulation.
+    """
+    # State: {Location: Dirt_Status (1=Dirty, 0=Clean)}
+    environment = {'A': random.randint(0, 1), 'B': random.randint(0, 1)}
+    
+    # Agent's initial location
+    location = random.choice(['A', 'B'])
+    
+    print("--- Vacuum Cleaner Simulation Started ---")
+    print(f"Initial State: A={environment['A']}, B={environment['B']} | Agent starts at {location}")
+    print("-" * 40)
+    
+    steps = 0
+    while steps < max_steps:
+        steps += 1
+        print(f"STEP {steps} | Location: {location}")
+        
+        # 1. Sense: Determine the current status
+        current_status = environment[location]
+        
+        if current_status == 1:
+            # 2. Act (Suck): If the current location is dirty
+            environment[location] = 0
+            action = "Suck"
+            print(f"  Action: **{action}** -> Location {location} is now **Clean** (0)")
+            
+        else:
+            # 2. Act (Move): If the current location is clean, move to the other location
+            action = "Move"
+            
+            # Determine the new location
+            new_location = 'B' if location == 'A' else 'A'
+            location = new_location
+            
+            print(f"  Action: **{action}** -> Moving to location **{location}**")
+            
+        # Check if environment is clean
+        if environment['A'] == 0 and environment['B'] == 0:
+            print("\n✅ Environment is fully clean! Simulation finished.")
+            break
+
+        # Display current state and pause for visualization
+        print(f"  Current Environment: A={environment['A']}, B={environment['B']}")
+        time.sleep(0.5) # Pause to make the output readable
+        
+    if steps >= max_steps:
+        print("\n🛑 Max steps reached. Simulation ended.")
+
+
+# --- Execute the simulation ---
+simulate_vacuum_agent(max_steps=15)
