@@ -1,0 +1,21 @@
+from sklearn.tree import DecisionTreeClassifier
+
+X = [
+    [180, 80, 44],
+    [175, 70, 42],
+    [160, 55, 38],
+    [165, 60, 39],
+    [170, 65, 40],
+    [155, 50, 36]
+]
+
+Y = ["male", "male", "female", "female", "female", "female"]
+
+clf = DecisionTreeClassifier()
+clf.fit(X, Y)
+
+test = [[172, 68, 41]]
+prediction = clf.predict(test)
+
+print("Test Input:", test)
+print("Predicted Gender:", prediction[0])
